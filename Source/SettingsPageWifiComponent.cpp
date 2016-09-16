@@ -377,7 +377,25 @@ void SettingsPageWifiComponent::updateConnectionLabelAndButton() {
     auto connectedAp = status.connectedAccessPoint();
     if (status.isConnected() && connectedAp &&
         connectedAp->hash == selectedAp->hash) {
-      ssidText += " (connected)";
+      //Snippet copied from Marshmallow pocket-home
+      //Creating a socket
+      int fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+      //This will helpus getting the IPv4 associated with wlan0 interface
+      struct ifreq ifr;
+      memset(&ifr, 0, sizeof(ifr));
+      ifr.ifr_addr.sa_family = AF_INET;
+      //Copying the string "wlan0" in the structure
+      sprintf(ifr.ifr_name, "wlan0");
+      //Getting the informations of the socket, so IP address
+      ioctl(fd, SIOCGIFADDR, &ifr);
+      //Close the (unused) socket
+      close(fd);
+
+      char* addr = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
+      String ip(addr);
+
+      ssidText += " (" + ip + ")";
       buttonText = "Disconnect";
     }
   }
